@@ -17,12 +17,12 @@ def main(args):
 
     data_type, net_type  = args.data_type, args.net_type
     parallel, image_size = args.parallel, args.image_size
-    epoch, model_save_path = args.eopch, args.model_save_path
+    epoch, model_save_path = args.epoch, args.model_save_path
     batch_size, num_class = args.batch_size, args.num_class
     # data_type = decathron_spleen
     train_loader, val_loader = get_dataset(data_type, image_size, batch_size)
 
-    if net_type == 'net_type':
+    if net_type == 'unetr':
         net = UNETR(img_shape=image_size, input_dim=1, output_dim=2, 
                 embed_dim=768, patch_size=16, num_heads=8, dropout=0., light_r=4)
     
@@ -41,11 +41,11 @@ def main(args):
     model_handler = ModelHandler(net, train_loader, val_loader, optimizer, criterion, metric_dice)
     losses, dice_scores = model_handler.epoch_train(epoch, num_class, model_save_path, model_save = True)
 
-    ## recommend using jupyter notebook
-    # plot_loss_dice_score(losses, dice_scores)
-    # weight_path = model_save_path + "/92_0.41817347208658856.pth"
-    # pred_dict = model_handler.inference(val_loader, load_weight = True, weight_path = weight_path)
-    # visualize_test(pred_dict)
+    # recommend using jupyter notebook
+    plot_loss_dice_score(losses, dice_scores)
+    weight_path = model_save_path + "/92_0.41817347208658856.pth"
+    pred_dict = model_handler.inference(val_loader, load_weight = False, weight_path = weight_path)
+    visualize_test(pred_dict)
 
 
 if __name__ == '__main__':

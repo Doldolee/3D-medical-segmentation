@@ -47,6 +47,7 @@ def visualize_test(pred_dict, image_size):
                 cnt3+=interval
             axes[i,j].axis('off')
     plt.subplots_adjust(wspace=0, hspace=0, left=0, right=1, bottom=0, top=1)
+    plt.savefig("./plot/visual.png")
     plt.show()  
 
 def plot_loss_dice_score(losses, dice_scores):
@@ -72,5 +73,5 @@ def plot_loss_dice_score(losses, dice_scores):
     ax[1].legend()
     ax[1].set_xlabel("Epochs")
     ax[1].set_ylabel("Dice score")
-    
+    plt.savefig("./plot/loss.png")
     plt.show()

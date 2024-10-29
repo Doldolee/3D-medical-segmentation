@@ -97,7 +97,7 @@ class ModelHandler:
         
         self.net.to(self.device)
         self.net.eval()
-        loss, dice_score = 0, 0
+
         with torch.no_grad():
             for i, data in enumerate(loader):
                 img, mask = data["img"].cpu(), data["mask"].cpu()
