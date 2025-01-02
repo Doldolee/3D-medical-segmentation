@@ -5,24 +5,25 @@ import os
 from util import binary_output
 
 class ModelHandler:
-    def __init__(self, net, train_loader, val_loader, optimizer, criterion, metric):
+    def __init__(self, net, train_loader, val_loader, optimizer, criterion, num_class, metric):
         self.optimizer = optimizer
         self.criterion = criterion
         self.metric = metric
         self.dataloaders_dict = {'train':train_loader, 'val' : val_loader}
         self.device = 'cuda'
         self.net = net.to(self.device)
+        self.num_class = num_class
         
         torch.backends.cudnn.benchmark = True
 
-    def epoch_train(self, epochs, num_class, model_save_path, model_save = True):
+    def epoch_train(self, epochs, model_save_path, model_save = True):
         losses = {'train':[], 'val':[]}
         dice_scores = {'train':[], 'val':[]}
         best_metric, best_epoch = 999, -1
         
         
         for epoch in range(1, epochs+1):
-            train_loss, train_dice_score, val_loss, val_dice_score = self.step_train_val(epoch, epochs, num_class)
+            train_loss, train_dice_score, val_loss, val_dice_score = self.step_train_val(epoch, epochs)
             
             losses['train'].append(train_loss)
             losses['val'].append(val_loss)
@@ -40,7 +41,7 @@ class ModelHandler:
                     
         return losses, dice_scores
     
-    def step_train_val(self, epoch, epochs, num_class):
+    def step_train_val(self, epoch, epochs):
         train_loss, train_dice_score = 0, 0
         val_loss, val_dice_score = 0, 0
         for phase in ['train', 'val']:
@@ -55,7 +56,7 @@ class ModelHandler:
             for step, batch in enumerate(epoch_iterator):
                 img, mask = (batch['img'].to(self.device), batch['mask'].to(self.device))
                 mask = torch.squeeze(mask, dim=1)
-                mask = one_hot(mask[:, None, ...], num_classes=num_class)
+                mask = one_hot(mask[:, None, ...], num_classes=self.num_class)
                 # print(mask.shape)
                 
                 self.optimizer.zero_grad()
@@ -69,7 +70,7 @@ class ModelHandler:
         
                 epoch_loss += step_loss.item()
         
-                bi_output = binary_output(output, num_class=num_class)
+                bi_output = binary_output(output, num_class=self.num_class)
                 self.metric(bi_output, mask)
                 step_dice_score = self.metric.aggregate().item()
                 epoch_dice_score += step_dice_score
@@ -87,7 +88,29 @@ class ModelHandler:
             self.metric.reset() # reset the status for next round
         
         return train_loss, train_dice_score, val_loss, val_dice_score
+    
+    def test(self, test_loader):
+        self.net.eval()
+        dice_score = 0
+        loss = 0
+        for batch in test_loader:
+            img, mask = (batch['img'].to(self.device), batch['mask'].to(self.device))
+            img, mask = img.to(self.device), mask.to(self.device)
+            mask = torch.squeeze(mask, dim=1)
+            mask = one_hot(mask[:, None, ...], num_classes=self.num_class)
 
+            output = self.net(img)
+            step_loss = self.criterion(output, mask)
+            loss += step_loss.item()
+
+            bi_output = binary_output(output, num_class=self.num_class)
+            self.metric(bi_output, mask)
+            step_dice_score = self.metric.aggregate().item()
+            dice_score += step_dice_score
+        dice_score /= len(test_loader)
+        loss /= len(test_loader)
+        self.metric.reset()
+        return dice_score, loss
 
     def inference(self, loader, load_weight = True, weight_path = None):
         pred_dict = {'input':[], 'target':[], 'output':[]}

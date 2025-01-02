@@ -28,8 +28,7 @@ def binary_output(output, num_class, keep_dim=True):
         argmax_oh = argmax_oh.permute(0,3,1,2)
     return argmax_oh
 
-
-def visualize_test(pred_dict, image_size):
+def visualize_test(pred_dict, image_size, net_type, data_type):
     ncols, nrows = 10, 3*3
     interval = int(image_size[-1]//(ncols*nrows/3))
     fig, axes = plt.subplots(ncols=ncols, nrows=nrows, figsize=(ncols,nrows))
@@ -47,10 +46,10 @@ def visualize_test(pred_dict, image_size):
                 cnt3+=interval
             axes[i,j].axis('off')
     plt.subplots_adjust(wspace=0, hspace=0, left=0, right=1, bottom=0, top=1)
-    plt.savefig("./plot/visual.png")
+    plt.savefig(f"./plot/visual_{net_type}_{data_type}.png")
     plt.show()  
 
-def plot_loss_dice_score(losses, dice_scores):
+def plot_loss_dice_score(losses, dice_scores, net_type, data_type):
     epochs = [i for i in range(len(losses['train']))]
     train_loss = losses['train']
     val_loss = losses['val']
@@ -73,5 +72,5 @@ def plot_loss_dice_score(losses, dice_scores):
     ax[1].legend()
     ax[1].set_xlabel("Epochs")
     ax[1].set_ylabel("Dice score")
-    plt.savefig("./plot/loss.png")
+    plt.savefig(f"./plot/{net_type}_{data_type}_loss_dice_score.png")
     plt.show()
