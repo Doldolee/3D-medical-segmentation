@@ -17,6 +17,10 @@
 | VNet    | 0.247              | 0.961         | 0.467             | 0.712        | 0.44              | 0.78         |
 | UNETR   | 0.007              | 0.992         | 0.371             | 0.865        | 0.409             | 0.79         |
 
+- fixing direction
+- check paper parameter setting
+- adjust input image size (image was reduced due to gpu allocation)
+- check official implemetation
 
 # Visual
 ![visual](./plot/visual.png)
